@@ -2,6 +2,7 @@ import { Activity, RefreshCw, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useMonitoringStore } from '@/store/monitoring';
 
 export const DashboardHeader = () => {
@@ -24,6 +25,7 @@ export const DashboardHeader = () => {
       </div>
 
       <div className="flex items-center space-x-4">
+        <ThemeToggle />
         <div className="flex items-center space-x-2">
           <Switch
             id="auto-refresh"
