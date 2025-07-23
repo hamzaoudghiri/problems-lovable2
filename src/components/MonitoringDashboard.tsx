@@ -5,6 +5,7 @@ import { ProblemList } from './ProblemList';
 import { ProblemsOverTimeChart, ImpactedEntitiesChart, ProblemTypesChart, SeverityDistributionChart } from './Charts';
 import { AIInsights } from './AIInsights';
 import { ProblemDetailsModal } from './ProblemDetailsModal';
+import { EntityProblemGrouping } from './EntityProblemGrouping';
 import { useMonitoringStore } from '@/store/monitoring';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, Loader2 } from 'lucide-react';
@@ -53,6 +54,9 @@ export const MonitoringDashboard = () => {
           <ProblemTypesChart />
           <SeverityDistributionChart />
         </div>
+
+        {/* Entity Problem Grouping */}
+        <EntityProblemGrouping />
 
         {/* AI Insights */}
         <AIInsights />
