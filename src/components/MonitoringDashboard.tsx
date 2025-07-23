@@ -3,6 +3,7 @@ import { DashboardHeader } from './DashboardHeader';
 import { StatsCards } from './StatsCards';
 import { ProblemList } from './ProblemList';
 import { ProblemsOverTimeChart, ImpactedEntitiesChart, ProblemTypesChart, SeverityDistributionChart } from './Charts';
+import { AIInsights } from './AIInsights';
 import { ProblemDetailsModal } from './ProblemDetailsModal';
 import { useMonitoringStore } from '@/store/monitoring';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -52,6 +53,9 @@ export const MonitoringDashboard = () => {
           <ProblemTypesChart />
           <SeverityDistributionChart />
         </div>
+
+        {/* AI Insights */}
+        <AIInsights />
 
         {/* Problems List */}
         <ProblemList />
