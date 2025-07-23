@@ -89,19 +89,19 @@ export const ImpactedEntitiesChart = () => {
       </CardHeader>
       <CardContent className="p-6">
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData.impactedEntities} layout="horizontal">
+          <BarChart data={chartData.impactedEntities}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis 
-              type="number" 
+              dataKey="entityName"
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
+              angle={-45}
+              textAnchor="end"
+              height={80}
             />
             <YAxis 
-              type="category" 
-              dataKey="entityName" 
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
-              width={120}
             />
             <Tooltip
               contentStyle={{
@@ -110,15 +110,12 @@ export const ImpactedEntitiesChart = () => {
                 borderRadius: '0.5rem',
                 color: 'hsl(var(--popover-foreground))',
               }}
-              formatter={(value, name) => [
-                name === 'totalDowntime' ? `${value} minutes` : value,
-                name === 'totalDowntime' ? 'Total Downtime' : 'Problem Count'
-              ]}
+              formatter={(value) => [`${value} minutes`, 'Downtime']}
             />
             <Bar 
               dataKey="totalDowntime" 
               fill="hsl(var(--primary))"
-              radius={[0, 4, 4, 0]}
+              radius={[4, 4, 0, 0]}
             />
           </BarChart>
         </ResponsiveContainer>
