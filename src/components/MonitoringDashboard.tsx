@@ -40,15 +40,9 @@ export const MonitoringDashboard = () => {
         <StatsCards />
 
         {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ProblemsOverTimeChart />
-          <ImpactedEntitiesChart />
-        </div>
+        
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ProblemTypesChart />
-          <SeverityDistributionChart />
-        </div>
+        
 
         {/* Entity Problem Chart */}
         <EntityProblemChart />

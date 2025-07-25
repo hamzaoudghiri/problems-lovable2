@@ -15,10 +15,10 @@ const SEVERITY_COLORS = {
 };
 const CHART_COLORS = ['#0891b2', '#3b82f6', '#8b5cf6', '#06b6d4', '#10b981'];
 export const ProblemsOverTimeChart = () => {
-  const { chartData } = useMonitoringStore();
-  
-  return (
-    <Card>
+  const {
+    chartData
+  } = useMonitoringStore();
+  return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5" />
@@ -36,14 +36,13 @@ export const ProblemsOverTimeChart = () => {
           </LineChart>
         </ResponsiveContainer>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
 export const ImpactedEntitiesChart = () => {
-  const { chartData } = useMonitoringStore();
-  
-  return (
-    <Card>
+  const {
+    chartData
+  } = useMonitoringStore();
+  return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Server className="h-5 w-5" />
@@ -61,14 +60,13 @@ export const ImpactedEntitiesChart = () => {
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
 export const ProblemTypesChart = () => {
-  const { chartData } = useMonitoringStore();
-  
-  return (
-    <Card>
+  const {
+    chartData
+  } = useMonitoringStore();
+  return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5" />
@@ -86,14 +84,13 @@ export const ProblemTypesChart = () => {
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
 export const SeverityDistributionChart = () => {
-  const { chartData } = useMonitoringStore();
-  
-  return (
-    <Card>
+  const {
+    chartData
+  } = useMonitoringStore();
+  return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <PieChartIcon className="h-5 w-5" />
@@ -103,98 +100,56 @@ export const SeverityDistributionChart = () => {
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
-            <Pie
-              data={chartData.severityDistribution}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="count"
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-            >
-              {chartData.severityDistribution.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={SEVERITY_COLORS[entry.severity as keyof typeof SEVERITY_COLORS] || '#8884d8'} />
-              ))}
+            <Pie data={chartData.severityDistribution} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="count" label={({
+            name,
+            percent
+          }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+              {chartData.severityDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={SEVERITY_COLORS[entry.severity as keyof typeof SEVERITY_COLORS] || '#8884d8'} />)}
             </Pie>
             <Tooltip />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export const EntityProblemChart = () => {
-  const { problems } = useMonitoringStore();
-  
+  const {
+    problems
+  } = useMonitoringStore();
+
   // Group entities by problem title and calculate durations
   const entityProblemData = problems.map(problem => {
-    const duration = problem.endTime 
-      ? problem.endTime - problem.startTime 
-      : Date.now() - problem.startTime;
-    
+    const duration = problem.endTime ? problem.endTime - problem.startTime : Date.now() - problem.startTime;
     return {
       problemTitle: problem.title.length > 30 ? problem.title.substring(0, 30) + '...' : problem.title,
       entityCount: problem.affectedEntities.length,
-      duration: Math.floor(duration / (1000 * 60)), // Convert to minutes
+      duration: Math.floor(duration / (1000 * 60)),
+      // Convert to minutes
       status: problem.status
     };
   }).filter(item => item.entityCount > 0);
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Server className="h-5 w-5" />
-          Entities by Problem (Duration Chart)
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={entityProblemData} layout="horizontal">
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" />
-            <YAxis 
-              type="category" 
-              dataKey="problemTitle" 
-              width={200}
-              tick={{ fontSize: 12 }}
-            />
-            <Tooltip 
-              formatter={(value, name) => [
-                name === 'entityCount' ? `${value} entities` : `${value} minutes`,
-                name === 'entityCount' ? 'Affected Entities' : 'Duration'
-              ]}
-            />
-            <Legend />
-            <Bar dataKey="entityCount" fill="#10b981" name="Affected Entities" />
-            <Bar dataKey="duration" fill="#f59e0b" name="Duration (minutes)" />
-          </BarChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
-  );
+  return;
 };
 
 // New charts for the entity-problem grouping section
 export const ProblemEntityDurationChart = () => {
-  const { problems } = useMonitoringStore();
-  
-  // Group by problem-title and entity combination (same logic as EntityProblemGrouping)
-  const groupMap = new Map<string, { problemTitle: string; entityName: string; totalDuration: number; status: string }>();
+  const {
+    problems
+  } = useMonitoringStore();
 
+  // Group by problem-title and entity combination (same logic as EntityProblemGrouping)
+  const groupMap = new Map<string, {
+    problemTitle: string;
+    entityName: string;
+    totalDuration: number;
+    status: string;
+  }>();
   problems.forEach(problem => {
     if (problem.affectedEntities.length === 0) return;
-
-    const duration = problem.endTime 
-      ? problem.endTime - problem.startTime 
-      : Date.now() - problem.startTime;
-
+    const duration = problem.endTime ? problem.endTime - problem.startTime : Date.now() - problem.startTime;
     problem.affectedEntities.forEach(entity => {
       const groupKey = `${problem.title}|${entity.entityId}`;
-
       if (groupMap.has(groupKey)) {
         const existingGroup = groupMap.get(groupKey)!;
         existingGroup.totalDuration += duration;
@@ -202,17 +157,16 @@ export const ProblemEntityDurationChart = () => {
         groupMap.set(groupKey, {
           problemTitle: problem.title.length > 25 ? problem.title.substring(0, 25) + '...' : problem.title,
           entityName: entity.displayName,
-          totalDuration: Math.floor(duration / (1000 * 60)), // Convert to minutes
+          totalDuration: Math.floor(duration / (1000 * 60)),
+          // Convert to minutes
           status: problem.status
         });
       }
     });
   });
-
   const chartData = Array.from(groupMap.values()).slice(0, 15); // Limit to top 15 for readability
 
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Timer className="h-5 w-5" />
@@ -224,43 +178,39 @@ export const ProblemEntityDurationChart = () => {
           <BarChart data={chartData} layout="horizontal">
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" />
-            <YAxis 
-              type="category" 
-              dataKey="entityName" 
-              width={150}
-              tick={{ fontSize: 11 }}
-            />
-            <Tooltip 
-              formatter={(value) => [`${value} minutes`, 'Duration']}
-              labelFormatter={(label) => `Entity: ${label}`}
-            />
+            <YAxis type="category" dataKey="entityName" width={150} tick={{
+            fontSize: 11
+          }} />
+            <Tooltip formatter={value => [`${value} minutes`, 'Duration']} labelFormatter={label => `Entity: ${label}`} />
             <Bar dataKey="totalDuration" fill="#dc2626" name="Duration (minutes)" />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export const ProblemEntityScatterChart = () => {
-  const { problems } = useMonitoringStore();
-  
+  const {
+    problems
+  } = useMonitoringStore();
+
   // Create scatter plot data showing relationship between entity types and duration
-  const scatterData: Array<{ entityType: string; duration: number; problemTitle: string; x: number; y: number }> = [];
-  
+  const scatterData: Array<{
+    entityType: string;
+    duration: number;
+    problemTitle: string;
+    x: number;
+    y: number;
+  }> = [];
   problems.forEach(problem => {
     if (problem.affectedEntities.length === 0) return;
-
-    const duration = problem.endTime 
-      ? problem.endTime - problem.startTime 
-      : Date.now() - problem.startTime;
-
+    const duration = problem.endTime ? problem.endTime - problem.startTime : Date.now() - problem.startTime;
     problem.affectedEntities.forEach((entity, index) => {
       scatterData.push({
         entityType: entity.entityType,
         duration: Math.floor(duration / (1000 * 60)),
         problemTitle: problem.title,
-        x: index + Math.random() * 0.5, // Add some jitter for better visibility
+        x: index + Math.random() * 0.5,
+        // Add some jitter for better visibility
         y: Math.floor(duration / (1000 * 60))
       });
     });
@@ -274,9 +224,7 @@ export const ProblemEntityScatterChart = () => {
     acc[item.entityType].push(item);
     return acc;
   }, {} as Record<string, typeof scatterData>);
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5" />
@@ -289,46 +237,31 @@ export const ProblemEntityScatterChart = () => {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" dataKey="x" domain={[0, 'dataMax']} tick={false} />
             <YAxis type="number" dataKey="y" name="Duration (min)" />
-            <Tooltip 
-              formatter={(value, name, props) => [
-                `${value} minutes`,
-                'Duration',
-                `Problem: ${props.payload.problemTitle}`,
-                `Entity Type: ${props.payload.entityType}`
-              ]}
-            />
+            <Tooltip formatter={(value, name, props) => [`${value} minutes`, 'Duration', `Problem: ${props.payload.problemTitle}`, `Entity Type: ${props.payload.entityType}`]} />
             <Legend />
-            {Object.entries(entityTypeGroups).map(([entityType, data], index) => (
-              <Scatter
-                key={entityType}
-                name={entityType}
-                data={data}
-                fill={CHART_COLORS[index % CHART_COLORS.length]}
-              />
-            ))}
+            {Object.entries(entityTypeGroups).map(([entityType, data], index) => <Scatter key={entityType} name={entityType} data={data} fill={CHART_COLORS[index % CHART_COLORS.length]} />)}
           </ScatterChart>
         </ResponsiveContainer>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export const EntityProblemSummaryChart = () => {
-  const { problems } = useMonitoringStore();
-  
-  // Aggregate data by problem title showing total entities and total duration
-  const summaryMap = new Map<string, { problemTitle: string; totalEntities: number; totalDuration: number; avgDuration: number }>();
+  const {
+    problems
+  } = useMonitoringStore();
 
+  // Aggregate data by problem title showing total entities and total duration
+  const summaryMap = new Map<string, {
+    problemTitle: string;
+    totalEntities: number;
+    totalDuration: number;
+    avgDuration: number;
+  }>();
   problems.forEach(problem => {
     if (problem.affectedEntities.length === 0) return;
-
-    const duration = problem.endTime 
-      ? problem.endTime - problem.startTime 
-      : Date.now() - problem.startTime;
-
+    const duration = problem.endTime ? problem.endTime - problem.startTime : Date.now() - problem.startTime;
     const durationMinutes = Math.floor(duration / (1000 * 60));
     const entityCount = problem.affectedEntities.length;
-
     if (summaryMap.has(problem.title)) {
       const existing = summaryMap.get(problem.title)!;
       existing.totalEntities += entityCount;
@@ -343,11 +276,8 @@ export const EntityProblemSummaryChart = () => {
       });
     }
   });
-
   const summaryData = Array.from(summaryMap.values()).slice(0, 10);
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5" />
@@ -358,27 +288,17 @@ export const EntityProblemSummaryChart = () => {
         <ResponsiveContainer width="100%" height={400}>
           <BarChart data={summaryData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="problemTitle" 
-              angle={-45}
-              textAnchor="end"
-              height={100}
-              tick={{ fontSize: 10 }}
-            />
+            <XAxis dataKey="problemTitle" angle={-45} textAnchor="end" height={100} tick={{
+            fontSize: 10
+          }} />
             <YAxis yAxisId="entities" orientation="left" />
             <YAxis yAxisId="duration" orientation="right" />
-            <Tooltip 
-              formatter={(value, name) => [
-                name === 'totalEntities' ? `${value} entities` : `${value} minutes`,
-                name === 'totalEntities' ? 'Total Entities' : 'Total Duration'
-              ]}
-            />
+            <Tooltip formatter={(value, name) => [name === 'totalEntities' ? `${value} entities` : `${value} minutes`, name === 'totalEntities' ? 'Total Entities' : 'Total Duration']} />
             <Legend />
             <Bar yAxisId="entities" dataKey="totalEntities" fill="#10b981" name="Total Entities" />
             <Bar yAxisId="duration" dataKey="totalDuration" fill="#f59e0b" name="Total Duration (min)" />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
