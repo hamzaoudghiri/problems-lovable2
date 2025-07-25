@@ -5,11 +5,11 @@ import { Clock, Server } from 'lucide-react';
 
 interface EntityProblemGroup {
   problemTitle: string;
-  entities: Array<{
+  entity: {
     entityId: string;
     displayName: string;
     entityType: string;
-  }>;
+  };
   totalDuration: number;
   status: string;
 }
@@ -27,23 +27,24 @@ export const EntityProblemGrouping = () => {
         ? problem.endTime - problem.startTime 
         : Date.now() - problem.startTime;
 
-      // Create a unique key based on problem title and entity IDs
-      const entityIds = problem.affectedEntities.map(e => e.entityId).sort().join(',');
-      const groupKey = `${problem.title}|${entityIds}`;
+      // Create a separate entry for each entity
+      problem.affectedEntities.forEach(entity => {
+        const groupKey = `${problem.title}|${entity.entityId}`;
 
-      if (groupMap.has(groupKey)) {
-        // Sum the duration for existing group
-        const existingGroup = groupMap.get(groupKey)!;
-        existingGroup.totalDuration += duration;
-      } else {
-        // Create new group
-        groupMap.set(groupKey, {
-          problemTitle: problem.title,
-          entities: problem.affectedEntities,
-          totalDuration: duration,
-          status: problem.status
-        });
-      }
+        if (groupMap.has(groupKey)) {
+          // Sum the duration for existing group
+          const existingGroup = groupMap.get(groupKey)!;
+          existingGroup.totalDuration += duration;
+        } else {
+          // Create new group
+          groupMap.set(groupKey, {
+            problemTitle: problem.title,
+            entity: entity,
+            totalDuration: duration,
+            status: problem.status
+          });
+        }
+      });
     });
 
     return Array.from(groupMap.values());
@@ -105,20 +106,13 @@ export const EntityProblemGrouping = () => {
                 
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">
-                    Affected Entities ({group.entities.length}):
+                    Affected Entity:
                   </p>
-                  <div className="flex flex-wrap gap-2">
-                    {group.entities.map((entity) => (
-                      <div
-                        key={entity.entityId}
-                        className="flex items-center gap-1 bg-muted rounded px-2 py-1 text-xs"
-                      >
-                        <span className="font-medium">{entity.displayName}</span>
-                        <span className="text-muted-foreground">
-                          ({entity.entityType})
-                        </span>
-                      </div>
-                    ))}
+                  <div className="flex items-center gap-1 bg-muted rounded px-2 py-1 text-xs w-fit">
+                    <span className="font-medium">{group.entity.displayName}</span>
+                    <span className="text-muted-foreground">
+                      ({group.entity.entityType})
+                    </span>
                   </div>
                 </div>
               </div>
