@@ -1,6 +1,6 @@
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ScatterChart, Scatter } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, Server, PieChart as PieChartIcon, BarChart3 } from 'lucide-react';
+import { TrendingUp, Server, PieChart as PieChartIcon, BarChart3, Timer, Users } from 'lucide-react';
 import { useMonitoringStore } from '@/store/monitoring';
 const SEVERITY_COLORS = {
   'Critical': '#dc2626',
@@ -171,6 +171,211 @@ export const EntityProblemChart = () => {
             <Legend />
             <Bar dataKey="entityCount" fill="#10b981" name="Affected Entities" />
             <Bar dataKey="duration" fill="#f59e0b" name="Duration (minutes)" />
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+};
+
+// New charts for the entity-problem grouping section
+export const ProblemEntityDurationChart = () => {
+  const { problems } = useMonitoringStore();
+  
+  // Group by problem-title and entity combination (same logic as EntityProblemGrouping)
+  const groupMap = new Map<string, { problemTitle: string; entityName: string; totalDuration: number; status: string }>();
+
+  problems.forEach(problem => {
+    if (problem.affectedEntities.length === 0) return;
+
+    const duration = problem.endTime 
+      ? problem.endTime - problem.startTime 
+      : Date.now() - problem.startTime;
+
+    problem.affectedEntities.forEach(entity => {
+      const groupKey = `${problem.title}|${entity.entityId}`;
+
+      if (groupMap.has(groupKey)) {
+        const existingGroup = groupMap.get(groupKey)!;
+        existingGroup.totalDuration += duration;
+      } else {
+        groupMap.set(groupKey, {
+          problemTitle: problem.title.length > 25 ? problem.title.substring(0, 25) + '...' : problem.title,
+          entityName: entity.displayName,
+          totalDuration: Math.floor(duration / (1000 * 60)), // Convert to minutes
+          status: problem.status
+        });
+      }
+    });
+  });
+
+  const chartData = Array.from(groupMap.values()).slice(0, 15); // Limit to top 15 for readability
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Timer className="h-5 w-5" />
+          Problem-Entity Duration Analysis
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={chartData} layout="horizontal">
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis type="number" />
+            <YAxis 
+              type="category" 
+              dataKey="entityName" 
+              width={150}
+              tick={{ fontSize: 11 }}
+            />
+            <Tooltip 
+              formatter={(value) => [`${value} minutes`, 'Duration']}
+              labelFormatter={(label) => `Entity: ${label}`}
+            />
+            <Bar dataKey="totalDuration" fill="#dc2626" name="Duration (minutes)" />
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+};
+
+export const ProblemEntityScatterChart = () => {
+  const { problems } = useMonitoringStore();
+  
+  // Create scatter plot data showing relationship between entity types and duration
+  const scatterData: Array<{ entityType: string; duration: number; problemTitle: string; x: number; y: number }> = [];
+  
+  problems.forEach(problem => {
+    if (problem.affectedEntities.length === 0) return;
+
+    const duration = problem.endTime 
+      ? problem.endTime - problem.startTime 
+      : Date.now() - problem.startTime;
+
+    problem.affectedEntities.forEach((entity, index) => {
+      scatterData.push({
+        entityType: entity.entityType,
+        duration: Math.floor(duration / (1000 * 60)),
+        problemTitle: problem.title,
+        x: index + Math.random() * 0.5, // Add some jitter for better visibility
+        y: Math.floor(duration / (1000 * 60))
+      });
+    });
+  });
+
+  // Group by entity type for better visualization
+  const entityTypeGroups = scatterData.reduce((acc, item) => {
+    if (!acc[item.entityType]) {
+      acc[item.entityType] = [];
+    }
+    acc[item.entityType].push(item);
+    return acc;
+  }, {} as Record<string, typeof scatterData>);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Users className="h-5 w-5" />
+          Entity Type vs Duration Distribution
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={350}>
+          <ScatterChart>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis type="number" dataKey="x" domain={[0, 'dataMax']} tick={false} />
+            <YAxis type="number" dataKey="y" name="Duration (min)" />
+            <Tooltip 
+              formatter={(value, name, props) => [
+                `${value} minutes`,
+                'Duration',
+                `Problem: ${props.payload.problemTitle}`,
+                `Entity Type: ${props.payload.entityType}`
+              ]}
+            />
+            <Legend />
+            {Object.entries(entityTypeGroups).map(([entityType, data], index) => (
+              <Scatter
+                key={entityType}
+                name={entityType}
+                data={data}
+                fill={CHART_COLORS[index % CHART_COLORS.length]}
+              />
+            ))}
+          </ScatterChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+};
+
+export const EntityProblemSummaryChart = () => {
+  const { problems } = useMonitoringStore();
+  
+  // Aggregate data by problem title showing total entities and total duration
+  const summaryMap = new Map<string, { problemTitle: string; totalEntities: number; totalDuration: number; avgDuration: number }>();
+
+  problems.forEach(problem => {
+    if (problem.affectedEntities.length === 0) return;
+
+    const duration = problem.endTime 
+      ? problem.endTime - problem.startTime 
+      : Date.now() - problem.startTime;
+
+    const durationMinutes = Math.floor(duration / (1000 * 60));
+    const entityCount = problem.affectedEntities.length;
+
+    if (summaryMap.has(problem.title)) {
+      const existing = summaryMap.get(problem.title)!;
+      existing.totalEntities += entityCount;
+      existing.totalDuration += durationMinutes * entityCount; // Sum for all entity combinations
+      existing.avgDuration = existing.totalDuration / existing.totalEntities;
+    } else {
+      summaryMap.set(problem.title, {
+        problemTitle: problem.title.length > 30 ? problem.title.substring(0, 30) + '...' : problem.title,
+        totalEntities: entityCount,
+        totalDuration: durationMinutes * entityCount,
+        avgDuration: durationMinutes
+      });
+    }
+  });
+
+  const summaryData = Array.from(summaryMap.values()).slice(0, 10);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <BarChart3 className="h-5 w-5" />
+          Problem Summary: Entities & Duration
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={summaryData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              dataKey="problemTitle" 
+              angle={-45}
+              textAnchor="end"
+              height={100}
+              tick={{ fontSize: 10 }}
+            />
+            <YAxis yAxisId="entities" orientation="left" />
+            <YAxis yAxisId="duration" orientation="right" />
+            <Tooltip 
+              formatter={(value, name) => [
+                name === 'totalEntities' ? `${value} entities` : `${value} minutes`,
+                name === 'totalEntities' ? 'Total Entities' : 'Total Duration'
+              ]}
+            />
+            <Legend />
+            <Bar yAxisId="entities" dataKey="totalEntities" fill="#10b981" name="Total Entities" />
+            <Bar yAxisId="duration" dataKey="totalDuration" fill="#f59e0b" name="Total Duration (min)" />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { DashboardHeader } from './DashboardHeader';
 import { StatsCards } from './StatsCards';
 import { ProblemList } from './ProblemList';
-import { ProblemsOverTimeChart, ImpactedEntitiesChart, ProblemTypesChart, SeverityDistributionChart, EntityProblemChart } from './Charts';
+import { ProblemsOverTimeChart, ImpactedEntitiesChart, ProblemTypesChart, SeverityDistributionChart, EntityProblemChart, ProblemEntityDurationChart, ProblemEntityScatterChart, EntityProblemSummaryChart } from './Charts';
 import { AIInsights } from './AIInsights';
 import { ProblemDetailsModal } from './ProblemDetailsModal';
 import { EntityProblemGrouping } from './EntityProblemGrouping';
@@ -55,6 +55,14 @@ export const MonitoringDashboard = () => {
 
         {/* Entity Problem Grouping */}
         <EntityProblemGrouping />
+
+        {/* Entity-Problem Analysis Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ProblemEntityDurationChart />
+          <ProblemEntityScatterChart />
+        </div>
+        
+        <EntityProblemSummaryChart />
 
         {/* AI Insights */}
         <AIInsights />
