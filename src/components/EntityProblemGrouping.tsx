@@ -17,18 +17,37 @@ interface EntityProblemGroup {
 export const EntityProblemGrouping = () => {
   const { problems } = useMonitoringStore();
 
-  const entityProblemGroups: EntityProblemGroup[] = problems.map(problem => {
-    const duration = problem.endTime 
-      ? problem.endTime - problem.startTime 
-      : Date.now() - problem.startTime;
+  const entityProblemGroups: EntityProblemGroup[] = (() => {
+    const groupMap = new Map<string, EntityProblemGroup>();
 
-    return {
-      problemTitle: problem.title,
-      entities: problem.affectedEntities,
-      totalDuration: duration,
-      status: problem.status
-    };
-  }).filter(group => group.entities.length > 0);
+    problems.forEach(problem => {
+      if (problem.affectedEntities.length === 0) return;
+
+      const duration = problem.endTime 
+        ? problem.endTime - problem.startTime 
+        : Date.now() - problem.startTime;
+
+      // Create a unique key based on problem title and entity IDs
+      const entityIds = problem.affectedEntities.map(e => e.entityId).sort().join(',');
+      const groupKey = `${problem.title}|${entityIds}`;
+
+      if (groupMap.has(groupKey)) {
+        // Sum the duration for existing group
+        const existingGroup = groupMap.get(groupKey)!;
+        existingGroup.totalDuration += duration;
+      } else {
+        // Create new group
+        groupMap.set(groupKey, {
+          problemTitle: problem.title,
+          entities: problem.affectedEntities,
+          totalDuration: duration,
+          status: problem.status
+        });
+      }
+    });
+
+    return Array.from(groupMap.values());
+  })();
 
   const formatDuration = (milliseconds: number) => {
     const hours = Math.floor(milliseconds / (1000 * 60 * 60));
