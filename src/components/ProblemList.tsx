@@ -85,5 +85,94 @@ export const ProblemList = () => {
     const duration = problem.endTime ? problem.endTime - problem.startTime : now - problem.startTime;
     return formatDuration(duration);
   };
-  return;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <AlertCircle className="h-5 w-5" />
+          Problems List
+          <Badge variant="outline" className="ml-auto">
+            {filteredProblems.length} problems
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center space-x-2 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search problems..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <Button variant="outline" size="sm">
+            <Filter className="h-4 w-4 mr-2" />
+            Filter
+          </Button>
+        </div>
+        
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Problem</TableHead>
+              <TableHead>Severity</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Entities</TableHead>
+              <TableHead>Duration</TableHead>
+              <TableHead>Started</TableHead>
+              <TableHead></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredProblems.map((problem) => (
+              <TableRow 
+                key={problem.problemId} 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => handleRowClick(problem)}
+              >
+                <TableCell>
+                  <div className="space-y-1">
+                    <div className="font-medium">{problem.title}</div>
+                    <div className="text-sm text-muted-foreground">{problem.displayId}</div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={getSeverityColor(problem.severityLevel)}>
+                    {getSeverityLabel(problem.severityLevel)}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={getStatusColor(problem.status)}>
+                    {problem.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center space-x-1">
+                    {problem.affectedEntities.slice(0, 3).map((entity, index) => {
+                      const IconComponent = getEntityIcon(entity.entityType);
+                      return (
+                        <IconComponent key={index} className="h-4 w-4 text-muted-foreground" />
+                      );
+                    })}
+                    {problem.affectedEntities.length > 3 && (
+                      <span className="text-sm text-muted-foreground">
+                        +{problem.affectedEntities.length - 3}
+                      </span>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>{getDuration(problem)}</TableCell>
+                <TableCell>{formatTimestamp(problem.startTime)}</TableCell>
+                <TableCell>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
 };

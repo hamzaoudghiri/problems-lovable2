@@ -129,7 +129,28 @@ export const EntityProblemChart = () => {
       status: problem.status
     };
   }).filter(item => item.entityCount > 0);
-  return;
+  
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <BarChart3 className="h-5 w-5" />
+          Entity Problem Overview
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={entityProblemData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="problemTitle" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="entityCount" fill="#10b981" />
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
 };
 
 // New charts for the entity-problem grouping section
@@ -301,4 +322,106 @@ export const EntityProblemSummaryChart = () => {
         </ResponsiveContainer>
       </CardContent>
     </Card>;
+};
+
+export const ProblemEntitiesChart = () => {
+  const {
+    problems
+  } = useMonitoringStore();
+
+  // Aggregate data by problem title showing total entities
+  const summaryMap = new Map<string, {
+    problemTitle: string;
+    totalEntities: number;
+  }>();
+  problems.forEach(problem => {
+    if (problem.affectedEntities.length === 0) return;
+    const entityCount = problem.affectedEntities.length;
+    if (summaryMap.has(problem.title)) {
+      const existing = summaryMap.get(problem.title)!;
+      existing.totalEntities += entityCount;
+    } else {
+      summaryMap.set(problem.title, {
+        problemTitle: problem.title.length > 30 ? problem.title.substring(0, 30) + '...' : problem.title,
+        totalEntities: entityCount
+      });
+    }
+  });
+  const entitiesData = Array.from(summaryMap.values()).slice(0, 10);
+  
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Users className="h-5 w-5" />
+          Total Entities by Problem
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={entitiesData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="problemTitle" angle={-45} textAnchor="end" height={100} tick={{
+            fontSize: 10
+          }} />
+            <YAxis />
+            <Tooltip formatter={(value) => [`${value} entities`, 'Total Entities']} />
+            <Bar dataKey="totalEntities" fill="#10b981" name="Total Entities" />
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+};
+
+export const ProblemDurationChart = () => {
+  const {
+    problems
+  } = useMonitoringStore();
+
+  // Aggregate data by problem title showing total duration
+  const summaryMap = new Map<string, {
+    problemTitle: string;
+    totalDuration: number;
+  }>();
+  problems.forEach(problem => {
+    if (problem.affectedEntities.length === 0) return;
+    const duration = problem.endTime ? problem.endTime - problem.startTime : Date.now() - problem.startTime;
+    const durationMinutes = Math.floor(duration / (1000 * 60));
+    const entityCount = problem.affectedEntities.length;
+    if (summaryMap.has(problem.title)) {
+      const existing = summaryMap.get(problem.title)!;
+      existing.totalDuration += durationMinutes * entityCount;
+    } else {
+      summaryMap.set(problem.title, {
+        problemTitle: problem.title.length > 30 ? problem.title.substring(0, 30) + '...' : problem.title,
+        totalDuration: durationMinutes * entityCount
+      });
+    }
+  });
+  const durationData = Array.from(summaryMap.values()).slice(0, 10);
+  
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Timer className="h-5 w-5" />
+          Total Duration by Problem
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={durationData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="problemTitle" angle={-45} textAnchor="end" height={100} tick={{
+            fontSize: 10
+          }} />
+            <YAxis />
+            <Tooltip formatter={(value) => [`${value} minutes`, 'Total Duration']} />
+            <Bar dataKey="totalDuration" fill="#f59e0b" name="Total Duration (min)" />
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
 };
