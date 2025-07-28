@@ -159,146 +159,156 @@ export const ProblemEntityDurationChart = () => {
     problems
   } = useMonitoringStore();
 
-  // Example data when no problems available
+  // Example data - simplified and clearer
   const exampleData = [
-    { problemTitle: "Database Connection...", entityName: "database-01", totalDuration: 245, status: "RESOLVED" },
-    { problemTitle: "High CPU Usage", entityName: "server-web-01", totalDuration: 180, status: "OPEN" },
-    { problemTitle: "Memory Leak", entityName: "app-backend", totalDuration: 320, status: "RESOLVED" },
-    { problemTitle: "Network Timeout", entityName: "api-gateway", totalDuration: 95, status: "OPEN" },
-    { problemTitle: "Disk Space Alert", entityName: "storage-01", totalDuration: 150, status: "RESOLVED" },
-    { problemTitle: "Service Unavailable", entityName: "auth-service", totalDuration: 275, status: "OPEN" },
-    { problemTitle: "Load Balancer Issue", entityName: "lb-01", totalDuration: 65, status: "RESOLVED" },
-    { problemTitle: "Cache Miss Rate High", entityName: "redis-cluster", totalDuration: 120, status: "OPEN" }
+    { entityName: "Database Server", duration: 245, status: "RESOLVED" },
+    { entityName: "Web Server", duration: 180, status: "OPEN" },
+    { entityName: "API Gateway", duration: 95, status: "RESOLVED" },
+    { entityName: "Cache Service", duration: 320, status: "OPEN" },
+    { entityName: "Auth Service", duration: 150, status: "RESOLVED" },
+    { entityName: "Load Balancer", duration: 65, status: "OPEN" }
   ];
 
-  // Group by problem-title and entity combination (same logic as EntityProblemGrouping)
-  const groupMap = new Map<string, {
-    problemTitle: string;
-    entityName: string;
-    totalDuration: number;
-    status: string;
-  }>();
+  // Simplified data processing
+  let chartData = exampleData;
   
   if (problems.length > 0) {
+    const entityDurations = new Map();
     problems.forEach(problem => {
       if (problem.affectedEntities.length === 0) return;
       const duration = problem.endTime ? problem.endTime - problem.startTime : Date.now() - problem.startTime;
       problem.affectedEntities.forEach(entity => {
-        const groupKey = `${problem.title}|${entity.entityId}`;
-        if (groupMap.has(groupKey)) {
-          const existingGroup = groupMap.get(groupKey)!;
-          existingGroup.totalDuration += duration;
-        } else {
-          groupMap.set(groupKey, {
-            problemTitle: problem.title.length > 25 ? problem.title.substring(0, 25) + '...' : problem.title,
-            entityName: entity.displayName,
-            totalDuration: Math.floor(duration / (1000 * 60)),
-            // Convert to minutes
-            status: problem.status
-          });
-        }
+        const key = entity.displayName;
+        const currentDuration = entityDurations.get(key) || 0;
+        entityDurations.set(key, currentDuration + Math.floor(duration / (1000 * 60)));
       });
     });
+    
+    chartData = Array.from(entityDurations.entries())
+      .map(([entityName, duration]) => ({
+        entityName: entityName.length > 20 ? entityName.substring(0, 20) + '...' : entityName,
+        duration,
+        status: 'OPEN'
+      }))
+      .slice(0, 8);
   }
-  
-  const chartData = problems.length > 0 ? Array.from(groupMap.values()).slice(0, 15) : exampleData;
 
-  return <Card>
+  return (
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Timer className="h-5 w-5" />
-          Problem-Entity Duration Analysis
+          Entity Duration Analysis
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={chartData} layout="horizontal">
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" />
-            <YAxis type="category" dataKey="entityName" width={150} tick={{
-            fontSize: 11
-          }} />
-            <Tooltip formatter={value => [`${value} minutes`, 'Duration']} labelFormatter={label => `Entity: ${label}`} />
-            <Bar dataKey="totalDuration" fill="#dc2626" name="Duration (minutes)" />
+        <ResponsiveContainer width="100%" height={350}>
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+            <XAxis 
+              dataKey="entityName" 
+              angle={-45} 
+              textAnchor="end" 
+              height={80}
+              tick={{ fontSize: 11 }}
+            />
+            <YAxis 
+              tick={{ fontSize: 11 }}
+              label={{ value: 'Duration (minutes)', angle: -90, position: 'insideLeft' }}
+            />
+            <Tooltip 
+              formatter={(value) => [`${value} minutes`, 'Duration']}
+              labelStyle={{ color: '#333' }}
+              contentStyle={{ 
+                backgroundColor: '#fff', 
+                border: '1px solid #ccc',
+                borderRadius: '4px'
+              }}
+            />
+            <Bar 
+              dataKey="duration" 
+              fill="#3b82f6" 
+              radius={[4, 4, 0, 0]}
+              name="Duration (minutes)"
+            />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
+
 export const ProblemEntityScatterChart = () => {
   const {
     problems
   } = useMonitoringStore();
 
-  // Example data when no problems available
-  const exampleScatterData = [
-    { entityType: "APPLICATION", duration: 145, problemTitle: "Database Connection Issue", x: 1, y: 145 },
-    { entityType: "SERVICE", duration: 280, problemTitle: "High CPU Usage", x: 2, y: 280 },
-    { entityType: "INFRASTRUCTURE", duration: 95, problemTitle: "Network Timeout", x: 3, y: 95 },
-    { entityType: "APPLICATION", duration: 320, problemTitle: "Memory Leak", x: 1.5, y: 320 },
-    { entityType: "SERVICE", duration: 180, problemTitle: "Service Unavailable", x: 2.5, y: 180 },
-    { entityType: "INFRASTRUCTURE", duration: 210, problemTitle: "Disk Space Alert", x: 3.5, y: 210 },
-    { entityType: "APPLICATION", duration: 75, problemTitle: "Cache Miss Rate High", x: 1.2, y: 75 },
-    { entityType: "SERVICE", duration: 165, problemTitle: "Load Balancer Issue", x: 2.3, y: 165 }
+  // Example data - simplified pie chart showing problem distribution by severity
+  const exampleData = [
+    { name: "Critical", value: 15, color: "#dc2626" },
+    { name: "High", value: 28, color: "#ea580c" },
+    { name: "Medium", value: 35, color: "#d97706" },
+    { name: "Low", value: 22, color: "#0891b2" }
   ];
 
-  // Create scatter plot data showing relationship between entity types and duration
-  const scatterData: Array<{
-    entityType: string;
-    duration: number;
-    problemTitle: string;
-    x: number;
-    y: number;
-  }> = [];
+  // Process real data if available
+  let chartData = exampleData;
   
   if (problems.length > 0) {
-    problems.forEach(problem => {
-      if (problem.affectedEntities.length === 0) return;
-      const duration = problem.endTime ? problem.endTime - problem.startTime : Date.now() - problem.startTime;
-      problem.affectedEntities.forEach((entity, index) => {
-        scatterData.push({
-          entityType: entity.entityType,
-          duration: Math.floor(duration / (1000 * 60)),
-          problemTitle: problem.title,
-          x: index + Math.random() * 0.5,
-          // Add some jitter for better visibility
-          y: Math.floor(duration / (1000 * 60))
-        });
-      });
-    });
+    const severityCount = problems.reduce((acc, problem) => {
+      const severity = problem.severityLevel;
+      acc[severity] = (acc[severity] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const total = Object.values(severityCount).reduce((sum, count) => sum + count, 0);
+    
+    chartData = Object.entries(severityCount).map(([severity, count]) => ({
+      name: severity,
+      value: count,
+      percentage: Math.round((count / total) * 100),
+      color: SEVERITY_COLORS[severity as keyof typeof SEVERITY_COLORS] || '#8884d8'
+    }));
   }
 
-  // Use example data if no real data available
-  const dataToUse = problems.length > 0 ? scatterData : exampleScatterData;
-
-  // Group by entity type for better visualization
-  const entityTypeGroups = dataToUse.reduce((acc, item) => {
-    if (!acc[item.entityType]) {
-      acc[item.entityType] = [];
-    }
-    acc[item.entityType].push(item);
-    return acc;
-  }, {} as Record<string, typeof dataToUse>);
-  return <Card>
+  return (
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          Entity Type vs Duration Distribution
+          <PieChartIcon className="h-5 w-5" />
+          Problem Severity Distribution
         </CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
-          <ScatterChart>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" dataKey="x" domain={[0, 'dataMax']} tick={false} />
-            <YAxis type="number" dataKey="y" name="Duration (min)" />
-            <Tooltip formatter={(value, name, props) => [`${value} minutes`, 'Duration', `Problem: ${props.payload.problemTitle}`, `Entity Type: ${props.payload.entityType}`]} />
-            <Legend />
-            {Object.entries(entityTypeGroups).map(([entityType, data], index) => <Scatter key={entityType} name={entityType} data={data} fill={CHART_COLORS[index % CHART_COLORS.length]} />)}
-          </ScatterChart>
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={({ name, value, percentage }) => `${name}: ${value} (${percentage || Math.round((value / chartData.reduce((sum, item) => sum + item.value, 0)) * 100)}%)`}
+              outerRadius={100}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip 
+              formatter={(value, name) => [`${value} problems`, name]}
+              contentStyle={{ 
+                backgroundColor: '#fff', 
+                border: '1px solid #ccc',
+                borderRadius: '4px'
+              }}
+            />
+          </PieChart>
         </ResponsiveContainer>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
 export const EntityProblemSummaryChart = () => {
   const {
