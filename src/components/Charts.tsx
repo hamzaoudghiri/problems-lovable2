@@ -159,6 +159,18 @@ export const ProblemEntityDurationChart = () => {
     problems
   } = useMonitoringStore();
 
+  // Example data when no problems available
+  const exampleData = [
+    { problemTitle: "Database Connection...", entityName: "database-01", totalDuration: 245, status: "RESOLVED" },
+    { problemTitle: "High CPU Usage", entityName: "server-web-01", totalDuration: 180, status: "OPEN" },
+    { problemTitle: "Memory Leak", entityName: "app-backend", totalDuration: 320, status: "RESOLVED" },
+    { problemTitle: "Network Timeout", entityName: "api-gateway", totalDuration: 95, status: "OPEN" },
+    { problemTitle: "Disk Space Alert", entityName: "storage-01", totalDuration: 150, status: "RESOLVED" },
+    { problemTitle: "Service Unavailable", entityName: "auth-service", totalDuration: 275, status: "OPEN" },
+    { problemTitle: "Load Balancer Issue", entityName: "lb-01", totalDuration: 65, status: "RESOLVED" },
+    { problemTitle: "Cache Miss Rate High", entityName: "redis-cluster", totalDuration: 120, status: "OPEN" }
+  ];
+
   // Group by problem-title and entity combination (same logic as EntityProblemGrouping)
   const groupMap = new Map<string, {
     problemTitle: string;
@@ -166,26 +178,30 @@ export const ProblemEntityDurationChart = () => {
     totalDuration: number;
     status: string;
   }>();
-  problems.forEach(problem => {
-    if (problem.affectedEntities.length === 0) return;
-    const duration = problem.endTime ? problem.endTime - problem.startTime : Date.now() - problem.startTime;
-    problem.affectedEntities.forEach(entity => {
-      const groupKey = `${problem.title}|${entity.entityId}`;
-      if (groupMap.has(groupKey)) {
-        const existingGroup = groupMap.get(groupKey)!;
-        existingGroup.totalDuration += duration;
-      } else {
-        groupMap.set(groupKey, {
-          problemTitle: problem.title.length > 25 ? problem.title.substring(0, 25) + '...' : problem.title,
-          entityName: entity.displayName,
-          totalDuration: Math.floor(duration / (1000 * 60)),
-          // Convert to minutes
-          status: problem.status
-        });
-      }
+  
+  if (problems.length > 0) {
+    problems.forEach(problem => {
+      if (problem.affectedEntities.length === 0) return;
+      const duration = problem.endTime ? problem.endTime - problem.startTime : Date.now() - problem.startTime;
+      problem.affectedEntities.forEach(entity => {
+        const groupKey = `${problem.title}|${entity.entityId}`;
+        if (groupMap.has(groupKey)) {
+          const existingGroup = groupMap.get(groupKey)!;
+          existingGroup.totalDuration += duration;
+        } else {
+          groupMap.set(groupKey, {
+            problemTitle: problem.title.length > 25 ? problem.title.substring(0, 25) + '...' : problem.title,
+            entityName: entity.displayName,
+            totalDuration: Math.floor(duration / (1000 * 60)),
+            // Convert to minutes
+            status: problem.status
+          });
+        }
+      });
     });
-  });
-  const chartData = Array.from(groupMap.values()).slice(0, 15); // Limit to top 15 for readability
+  }
+  
+  const chartData = problems.length > 0 ? Array.from(groupMap.values()).slice(0, 15) : exampleData;
 
   return <Card>
       <CardHeader>
@@ -214,6 +230,18 @@ export const ProblemEntityScatterChart = () => {
     problems
   } = useMonitoringStore();
 
+  // Example data when no problems available
+  const exampleScatterData = [
+    { entityType: "APPLICATION", duration: 145, problemTitle: "Database Connection Issue", x: 1, y: 145 },
+    { entityType: "SERVICE", duration: 280, problemTitle: "High CPU Usage", x: 2, y: 280 },
+    { entityType: "INFRASTRUCTURE", duration: 95, problemTitle: "Network Timeout", x: 3, y: 95 },
+    { entityType: "APPLICATION", duration: 320, problemTitle: "Memory Leak", x: 1.5, y: 320 },
+    { entityType: "SERVICE", duration: 180, problemTitle: "Service Unavailable", x: 2.5, y: 180 },
+    { entityType: "INFRASTRUCTURE", duration: 210, problemTitle: "Disk Space Alert", x: 3.5, y: 210 },
+    { entityType: "APPLICATION", duration: 75, problemTitle: "Cache Miss Rate High", x: 1.2, y: 75 },
+    { entityType: "SERVICE", duration: 165, problemTitle: "Load Balancer Issue", x: 2.3, y: 165 }
+  ];
+
   // Create scatter plot data showing relationship between entity types and duration
   const scatterData: Array<{
     entityType: string;
@@ -222,29 +250,35 @@ export const ProblemEntityScatterChart = () => {
     x: number;
     y: number;
   }> = [];
-  problems.forEach(problem => {
-    if (problem.affectedEntities.length === 0) return;
-    const duration = problem.endTime ? problem.endTime - problem.startTime : Date.now() - problem.startTime;
-    problem.affectedEntities.forEach((entity, index) => {
-      scatterData.push({
-        entityType: entity.entityType,
-        duration: Math.floor(duration / (1000 * 60)),
-        problemTitle: problem.title,
-        x: index + Math.random() * 0.5,
-        // Add some jitter for better visibility
-        y: Math.floor(duration / (1000 * 60))
+  
+  if (problems.length > 0) {
+    problems.forEach(problem => {
+      if (problem.affectedEntities.length === 0) return;
+      const duration = problem.endTime ? problem.endTime - problem.startTime : Date.now() - problem.startTime;
+      problem.affectedEntities.forEach((entity, index) => {
+        scatterData.push({
+          entityType: entity.entityType,
+          duration: Math.floor(duration / (1000 * 60)),
+          problemTitle: problem.title,
+          x: index + Math.random() * 0.5,
+          // Add some jitter for better visibility
+          y: Math.floor(duration / (1000 * 60))
+        });
       });
     });
-  });
+  }
+
+  // Use example data if no real data available
+  const dataToUse = problems.length > 0 ? scatterData : exampleScatterData;
 
   // Group by entity type for better visualization
-  const entityTypeGroups = scatterData.reduce((acc, item) => {
+  const entityTypeGroups = dataToUse.reduce((acc, item) => {
     if (!acc[item.entityType]) {
       acc[item.entityType] = [];
     }
     acc[item.entityType].push(item);
     return acc;
-  }, {} as Record<string, typeof scatterData>);
+  }, {} as Record<string, typeof dataToUse>);
   return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
