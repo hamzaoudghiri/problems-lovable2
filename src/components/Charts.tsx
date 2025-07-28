@@ -363,25 +363,41 @@ export const ProblemEntitiesChart = () => {
     problems
   } = useMonitoringStore();
 
+  // Example data when no problems available
+  const exampleEntitiesData = [
+    { problemTitle: "Database Connection Issue", totalEntities: 12 },
+    { problemTitle: "High CPU Usage Alert", totalEntities: 8 },
+    { problemTitle: "Memory Leak Detection", totalEntities: 15 },
+    { problemTitle: "Network Timeout Events", totalEntities: 6 },
+    { problemTitle: "Disk Space Warning", totalEntities: 10 },
+    { problemTitle: "Service Unavailable", totalEntities: 18 },
+    { problemTitle: "Load Balancer Issues", totalEntities: 4 },
+    { problemTitle: "Cache Performance", totalEntities: 22 }
+  ];
+
   // Aggregate data by problem title showing total entities
   const summaryMap = new Map<string, {
     problemTitle: string;
     totalEntities: number;
   }>();
-  problems.forEach(problem => {
-    if (problem.affectedEntities.length === 0) return;
-    const entityCount = problem.affectedEntities.length;
-    if (summaryMap.has(problem.title)) {
-      const existing = summaryMap.get(problem.title)!;
-      existing.totalEntities += entityCount;
-    } else {
-      summaryMap.set(problem.title, {
-        problemTitle: problem.title.length > 30 ? problem.title.substring(0, 30) + '...' : problem.title,
-        totalEntities: entityCount
-      });
-    }
-  });
-  const entitiesData = Array.from(summaryMap.values()).slice(0, 10);
+  
+  if (problems.length > 0) {
+    problems.forEach(problem => {
+      if (problem.affectedEntities.length === 0) return;
+      const entityCount = problem.affectedEntities.length;
+      if (summaryMap.has(problem.title)) {
+        const existing = summaryMap.get(problem.title)!;
+        existing.totalEntities += entityCount;
+      } else {
+        summaryMap.set(problem.title, {
+          problemTitle: problem.title.length > 30 ? problem.title.substring(0, 30) + '...' : problem.title,
+          totalEntities: entityCount
+        });
+      }
+    });
+  }
+  
+  const entitiesData = problems.length > 0 ? Array.from(summaryMap.values()).slice(0, 10) : exampleEntitiesData;
   
   return (
     <Card>
@@ -413,27 +429,43 @@ export const ProblemDurationChart = () => {
     problems
   } = useMonitoringStore();
 
+  // Example data when no problems available
+  const exampleDurationData = [
+    { problemTitle: "Database Connection Issue", totalDuration: 2940 },
+    { problemTitle: "High CPU Usage Alert", totalDuration: 1440 },
+    { problemTitle: "Memory Leak Detection", totalDuration: 4800 },
+    { problemTitle: "Network Timeout Events", totalDuration: 570 },
+    { problemTitle: "Disk Space Warning", totalDuration: 1500 },
+    { problemTitle: "Service Unavailable", totalDuration: 4950 },
+    { problemTitle: "Load Balancer Issues", totalDuration: 260 },
+    { problemTitle: "Cache Performance", totalDuration: 2640 }
+  ];
+
   // Aggregate data by problem title showing total duration
   const summaryMap = new Map<string, {
     problemTitle: string;
     totalDuration: number;
   }>();
-  problems.forEach(problem => {
-    if (problem.affectedEntities.length === 0) return;
-    const duration = problem.endTime ? problem.endTime - problem.startTime : Date.now() - problem.startTime;
-    const durationMinutes = Math.floor(duration / (1000 * 60));
-    const entityCount = problem.affectedEntities.length;
-    if (summaryMap.has(problem.title)) {
-      const existing = summaryMap.get(problem.title)!;
-      existing.totalDuration += durationMinutes * entityCount;
-    } else {
-      summaryMap.set(problem.title, {
-        problemTitle: problem.title.length > 30 ? problem.title.substring(0, 30) + '...' : problem.title,
-        totalDuration: durationMinutes * entityCount
-      });
-    }
-  });
-  const durationData = Array.from(summaryMap.values()).slice(0, 10);
+  
+  if (problems.length > 0) {
+    problems.forEach(problem => {
+      if (problem.affectedEntities.length === 0) return;
+      const duration = problem.endTime ? problem.endTime - problem.startTime : Date.now() - problem.startTime;
+      const durationMinutes = Math.floor(duration / (1000 * 60));
+      const entityCount = problem.affectedEntities.length;
+      if (summaryMap.has(problem.title)) {
+        const existing = summaryMap.get(problem.title)!;
+        existing.totalDuration += durationMinutes * entityCount;
+      } else {
+        summaryMap.set(problem.title, {
+          problemTitle: problem.title.length > 30 ? problem.title.substring(0, 30) + '...' : problem.title,
+          totalDuration: durationMinutes * entityCount
+        });
+      }
+    });
+  }
+  
+  const durationData = problems.length > 0 ? Array.from(summaryMap.values()).slice(0, 10) : exampleDurationData;
   
   return (
     <Card>
